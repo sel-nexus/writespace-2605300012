@@ -33,8 +33,7 @@ test('invalid login, UI registration, canonical storage, reload and authenticate
   await page.getByLabel('Confirm password').fill(' demo-only ');
   await page.getByRole('button', { name: 'Register', exact: true }).click();
 
-  // Role homes are not implemented in this slice; App returns to real landing.
-  await expect(page).toHaveURL(/\/$/);
+  await expect(page).toHaveURL(/\/blogs$/);
   await expect(page.getByText('Rae Reader', { exact: true })).toBeVisible();
   const state = await page.evaluate(() => ({
     users: JSON.parse(localStorage.getItem('writespace_users')),
@@ -68,14 +67,16 @@ test('invalid login, UI registration, canonical storage, reload and authenticate
       session: JSON.parse(localStorage.getItem('writespace_session')),
     })),
   ).toEqual(state);
+  await page.getByRole('link', { name: 'WriteSpace', exact: true }).click();
   await page
     .getByRole('link', { name: 'Get Started Free', exact: true })
     .click();
-  await expect(page).toHaveURL(/\/$/);
+  await expect(page).toHaveURL(/\/blogs$/);
   await expect(page.getByRole('heading', { name: 'Register' })).toHaveCount(0);
+  await page.getByRole('link', { name: 'WriteSpace', exact: true }).click();
   // Footer Login remains an actual incoming link even for a local session.
   await page.getByRole('link', { name: 'Login', exact: true }).click();
-  await expect(page).toHaveURL(/\/$/);
+  await expect(page).toHaveURL(/\/blogs$/);
   await expect(
     page.getByRole('heading', { name: 'Login', exact: true }),
   ).toHaveCount(0);
@@ -84,6 +85,16 @@ test('invalid login, UI registration, canonical storage, reload and authenticate
       JSON.parse(localStorage.getItem('writespace_session')),
     ),
   ).toEqual(state.session);
+  await page.getByRole('button', { name: /Rae Reader/ }).click();
+  await page.getByRole('button', { name: 'Logout' }).click();
+  await expect(page).toHaveURL(/\/$/);
+  expect(await page.evaluate(() => localStorage.getItem('writespace_session'))).toBeNull();
+  await page.getByRole('link', { name: 'Start Reading', exact: true }).click();
+  await page.getByLabel('Username').fill(' rAE ');
+  await page.getByLabel('Password').fill(' demo-only ');
+  await page.getByRole('button', { name: 'Login', exact: true }).click();
+  await expect(page).toHaveURL(/\/blogs$/);
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('writespace_session')))).toEqual(state.session);
 });
 
 test('mobile header registration entry rejects reserved names and returns through Login', async ({
