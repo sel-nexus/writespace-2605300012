@@ -37,7 +37,20 @@ test('empty direct route has exact copy and real Write action', async ({ page })
   await seed(page, []);
   await page.goto('/blogs');
   await expect(page.getByText('No blogs yet. Be the first to write one!')).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Write', exact: true }).last()).toHaveAttribute('href', '/write');
+  const emptyWrite = page.getByRole('main').getByRole('link', { name: 'Write', exact: true });
+  await expect(emptyWrite).toHaveAttribute('href', '/write');
+  await emptyWrite.click();
+  await expect(page).toHaveURL(/\/write$/);
+  await expect(page.getByRole('heading', { name: 'Write a Post', exact: true })).toBeVisible();
+  await expect(page.getByLabel('Title')).toBeVisible();
+  await expect(page.getByLabel('Content')).toBeVisible();
+  await page.getByLabel('Title').fill('Discarded reading draft');
+  await page.getByLabel('Content').fill('Unsaved content');
+  await page.getByRole('main').getByRole('link', { name: 'Cancel', exact: true }).click();
+  await expect(page).toHaveURL(/\/blogs$/);
+  await expect(page.getByRole('heading', { name: 'All Blogs', exact: true })).toBeVisible();
+  await expect(page.getByText('No blogs yet. Be the first to write one!')).toBeVisible();
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('writespace_posts')))).toEqual([]);
 });
 test('missing direct reader provides back navigation', async ({ page }) => {
   await seed(page);

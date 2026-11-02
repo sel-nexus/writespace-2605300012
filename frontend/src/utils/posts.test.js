@@ -59,6 +59,34 @@ describe('posts', () => {
   it.each([null, {}, 'rows'])('returns empty for non-array %#', (rows) =>
     expect(orderedPosts(rows)).toEqual([]),
   );
+  it.each([
+    ['equal valid dates, first then second', post.createdAt, post.createdAt, false, ['first', 'second']],
+    ['equal valid dates, second then first', post.createdAt, post.createdAt, true, ['second', 'first']],
+    ['both unavailable dates, first then second', 'bad', null, false, ['first', 'second']],
+    ['both unavailable dates, second then first', 'bad', null, true, ['second', 'first']],
+    ['unavailable left date and valid right date', 'bad', '1960-01-01T00:00:00Z', false, ['second', 'first']],
+    ['valid left date and unavailable right date', 'bad', '1960-01-01T00:00:00Z', true, ['second', 'first']],
+    ['older left date and newer right date', '2020-01-01T00:00:00Z', post.createdAt, false, ['second', 'first']],
+    ['newer left date and older right date', '2020-01-01T00:00:00Z', post.createdAt, true, ['second', 'first']],
+  ])(
+    'orders %s independently without changing input or persisted rows',
+    (_case, firstDate, secondDate, reversed, expectedIds) => {
+      const first = Object.freeze({ ...post, id: 'first', createdAt: firstDate });
+      const second = Object.freeze({ ...post, id: 'second', createdAt: secondDate });
+      const rows = Object.freeze(reversed ? [second, first] : [first, second]);
+      const originalRows = rows.map((row) => ({ ...row }));
+      savePosts(rows);
+      const persisted = localStorage.getItem('writespace_posts');
+
+      const result = orderedPosts(rows);
+      expect(result.map((row) => row.id)).toEqual(expectedIds);
+      expect(result).not.toBe(rows);
+      expect(orderedPosts().map((row) => row.id)).toEqual(expectedIds);
+      expect(rows).toEqual(originalRows);
+      expect(getPosts()).toEqual(originalRows);
+      expect(localStorage.getItem('writespace_posts')).toBe(persisted);
+    },
+  );
   it('sorts copies, preserves ties, filters bad rows and places all invalid dates last', () => {
     const rows = [
       { ...post, id: 'invalid', createdAt: 'bad' },

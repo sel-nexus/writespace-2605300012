@@ -17,8 +17,14 @@ test('UI register → write → read → edit → reload → delete cancel/confi
   const identity = await page.evaluate(() =>
     JSON.parse(localStorage.getItem('writespace_session')),
   );
-  await page.getByRole('link', { name: 'Write', exact: true }).click();
+  await page
+    .getByRole('navigation', { name: 'Authenticated navigation' })
+    .getByRole('link', { name: 'Write', exact: true })
+    .click();
   await expect(page).toHaveURL(/\/write$/);
+  await expect(
+    page.getByRole('heading', { name: 'Write a Post', exact: true }),
+  ).toBeVisible();
   await page.getByRole('button', { name: 'Save', exact: true }).click();
   await expect(page.getByRole('alert')).toHaveCount(2);
   expect(
@@ -31,7 +37,17 @@ test('UI register → write → read → edit → reload → delete cancel/confi
   expect(
     await page.evaluate(() => localStorage.getItem('writespace_posts')),
   ).toBeNull();
-  await page.getByRole('link', { name: 'Write', exact: true }).click();
+  await expect(
+    page.getByRole('main').getByText('No blogs yet. Be the first to write one!'),
+  ).toBeVisible();
+  await page
+    .getByRole('main')
+    .getByRole('link', { name: 'Write', exact: true })
+    .click();
+  await expect(page).toHaveURL(/\/write$/);
+  await expect(
+    page.getByRole('heading', { name: 'Write a Post', exact: true }),
+  ).toBeVisible();
   const content = '  A plain-text <b>thought</b>\n\tSecond line  ';
   await page.getByLabel('Title').fill('  First Note  ');
   await page.getByLabel('Content').fill(content);

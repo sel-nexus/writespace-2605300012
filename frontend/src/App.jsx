@@ -30,7 +30,7 @@ export default function App() {
   return (
     <div className={ui.page}>
       {reading && session && (
-        <Navbar session={session} onLogout={() => setSession(null)} />
+        <Navbar session={session} />
       )}
       <Routes>
         <Route path="/" element={<LandingPage />} />

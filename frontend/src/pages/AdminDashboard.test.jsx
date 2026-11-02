@@ -4,7 +4,12 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import App from '../App.jsx';
-import { clearSession, setSession } from '../utils/auth.js';
+import { authenticate, clearSession, setSession } from '../utils/auth.js';
+import {
+  createAccount,
+  createAdminAccount,
+  managedAccounts,
+} from '../utils/accounts.js';
 import { getPosts, getUsers, savePosts, saveUsers } from '../utils/storage.js';
 
 const admin = {
@@ -161,6 +166,61 @@ it('counts valid posts and all registered roles, excludes malformed accounts and
   expect(getPosts()).toEqual(before);
   expect(getUsers()).toEqual(accounts);
 });
+
+it('counts helper-created user and Admin accounts with unchanged whitespace passwords', () => {
+  setSession(admin);
+  const registered = createAccount({
+    displayName: 'Whitespace User',
+    username: 'whitespace-user',
+    password: ' ',
+    confirmPassword: ' ',
+  });
+  const createdAdmin = createAdminAccount({
+    displayName: 'Whitespace Admin',
+    username: 'whitespace-admin',
+    password: ' ',
+    role: 'admin',
+  });
+  expect(registered.errors).toEqual({});
+  expect(createdAdmin.errors).toEqual({});
+  expect(registered.account).toMatchObject({ password: ' ', role: 'user' });
+  expect(createdAdmin.account).toMatchObject({ password: ' ', role: 'admin' });
+  const saved = [registered.account, createdAdmin.account];
+  expect(getUsers()).toEqual(saved);
+  expect(managedAccounts()).toEqual(saved);
+  for (const row of saved) {
+    expect(authenticate(row.username, ' ')).toEqual({
+      userId: row.id,
+      username: row.username,
+      displayName: row.displayName,
+      role: row.role,
+    });
+    expect(authenticate(row.username, '')).toBeNull();
+  }
+  mount();
+  metrics(0, 2, 2);
+  expect(getUsers()).toEqual(saved);
+});
+
+it.each([null, '', ' ', 'not-a-date', 5, undefined])(
+  'counts displayable accounts with unavailable dates and excludes the fixed Admin id %#',
+  (createdAt) => {
+    setSession(admin);
+    const visible = [
+      { ...account, createdAt },
+      { ...account, id: 'a', username: 'alex', role: 'admin', createdAt },
+    ];
+    saveUsers([
+      ...visible,
+      { ...account, id: 'admin', username: 'legacy-admin', role: 'admin' },
+    ]);
+    const before = getUsers();
+    expect(managedAccounts()).toEqual(before.slice(0, 2));
+    mount();
+    metrics(0, 2, 2);
+    expect(getUsers()).toEqual(before);
+  },
+);
 
 it('renders unavailable dates and escaped titles and navigates through a real recent-post link', async () => {
   setSession(admin);

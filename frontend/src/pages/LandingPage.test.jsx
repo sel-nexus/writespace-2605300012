@@ -208,8 +208,19 @@ describe('LandingPage', () => {
   });
 });
 describe('guest App route table', () => {
-  it.each(['/register', '/blogs', '/admin', '/unknown'])(
-    'safely redirects unmatched %s to public landing',
+  it('renders the public registration route for guests', () => {
+    render(
+      <MemoryRouter
+        initialEntries={['/register']}
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      >
+        <App />
+      </MemoryRouter>,
+    );
+    expect(screen.getByRole('heading', { name: 'Register' })).toBeVisible();
+  });
+  it.each(['/blogs', '/admin'])(
+    'redirects guests from protected %s to Login',
     (path) => {
       render(
         <MemoryRouter
@@ -219,11 +230,22 @@ describe('guest App route table', () => {
           <App />
         </MemoryRouter>,
       );
-      expect(
-        screen.getByRole('heading', { level: 1, name: 'WriteSpace' }),
-      ).toBeVisible();
+      expect(screen.getByRole('heading', { name: 'Login' })).toBeVisible();
     },
   );
+  it('redirects only an unmatched route to public landing', () => {
+    render(
+      <MemoryRouter
+        initialEntries={['/unknown']}
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      >
+        <App />
+      </MemoryRouter>,
+    );
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'WriteSpace' }),
+    ).toBeVisible();
+  });
   it('routes login without nesting another router', () => {
     render(
       <MemoryRouter

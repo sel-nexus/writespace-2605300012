@@ -270,7 +270,7 @@ describe('RegisterPage', () => {
     expect(localStorage.getItem('writespace_session')).toBe('{bad');
     expect(localStorage.getItem('writespace_users')).toBeNull();
   });
-  it('uses the actual App registration route without changing its guest fallback', async () => {
+  it('navigates from Login to Register and then home through the brand link in App', async () => {
     render(
       <MemoryRouter
         initialEntries={['/login']}

@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { StatCard } from '../components/StatCard.jsx';
 import { buttons, demoGuidance, ui } from '../components/ui.js';
 import { getSession } from '../utils/auth.js';
-import { getUsers } from '../utils/storage.js';
+import { managedAccounts } from '../utils/accounts.js';
 import {
   canManagePost,
   deletePost,
@@ -12,25 +12,6 @@ import {
   formatPostDate,
   orderedPosts,
 } from '../utils/posts.js';
-
-/** Recognize registered account rows without treating malformed data as accounts.
- * Args:
- *   row: An untrusted users-array entry.
- * Returns:
- *   Whether the required identity, credentials and recognized role are present.
- */
-function isAccount(row) {
-  return (
-    row !== null &&
-    typeof row === 'object' &&
-    !Array.isArray(row) &&
-    ['id', 'displayName', 'username', 'password', 'createdAt'].every(
-      (key) => typeof row[key] === 'string' && row[key].trim().length > 0,
-    ) &&
-    ['user', 'admin'].includes(row.role) &&
-    row.username.trim().toLocaleLowerCase('en-US') !== 'admin'
-  );
-}
 
 /** Render three settled metrics, latest five posts and explicit quick actions.
  * Returns:
@@ -41,7 +22,7 @@ function isAccount(row) {
 export default function AdminDashboard() {
   const [posts, setPosts] = useState(orderedPosts);
   const [error, setError] = useState('');
-  const accounts = getUsers().filter(isAccount);
+  const accounts = managedAccounts();
   const session = getSession();
   const allowed = session?.role === 'admin';
 

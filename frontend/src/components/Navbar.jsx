@@ -10,11 +10,10 @@ import { clearSession } from '../utils/auth.js';
 /** Compose an authenticated header with independently toggled mobile and account panels.
  * Args:
  *   session: The current validated local identity supplied by the app shell.
- *   onLogout: Refresh the shell after successful session removal.
  * Returns:
  *   Accessible links and buttons; opening either panel never clears storage.
  */
-export function Navbar({ session, onLogout = () => {} }) {
+export function Navbar({ session }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [error, setError] = useState('');
@@ -30,7 +29,6 @@ export function Navbar({ session, onLogout = () => {} }) {
   function logout() {
     try {
       clearSession();
-      onLogout();
       navigate('/');
     } catch {
       setError('Logout could not be completed in this browser.');
@@ -96,5 +94,4 @@ Navbar.propTypes = {
     userId: PropTypes.string.isRequired, username: PropTypes.string.isRequired,
     displayName: PropTypes.string.isRequired, role: PropTypes.oneOf(['admin', 'user']).isRequired,
   }).isRequired,
-  onLogout: PropTypes.func,
 };
