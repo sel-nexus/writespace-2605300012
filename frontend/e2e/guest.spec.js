@@ -25,8 +25,10 @@ test('guest empty discovery, invalid login and fixed Admin sign-in', async ({
   await page.getByLabel('Username').fill(' ADMIN ');
   await page.getByLabel('Password').fill('admin');
   await page.getByRole('button', { name: 'Login', exact: true }).click();
-  // The guest-only App redirects unfinished role homes back to public landing.
-  await expect(page).toHaveURL(/\/$/);
+  await expect(page).toHaveURL(/\/admin$/);
+  await expect(
+    page.getByRole('heading', { name: 'Admin Dashboard' }),
+  ).toBeVisible();
   await expect(page.getByText('Admin', { exact: true })).toBeVisible();
   expect(
     await page.evaluate(() =>
@@ -38,9 +40,9 @@ test('guest empty discovery, invalid login and fixed Admin sign-in', async ({
     displayName: 'Admin',
     role: 'admin',
   });
-  await expect(
-    page.getByRole('link', { name: 'Go to Dashboard' }),
-  ).toHaveAttribute('href', '/admin');
+  await page.getByRole('link', { name: 'WriteSpace', exact: true }).click();
+  await page.getByRole('link', { name: 'Go to Dashboard' }).click();
+  await expect(page).toHaveURL(/\/admin$/);
   await page.reload();
   await expect(page.getByRole('img', { name: 'Admin avatar' })).toBeVisible();
 });
@@ -109,18 +111,24 @@ test('local previews are ordered and capped; guest selection enters login', asyn
   await page.getByRole('link', { name: 'WriteSpace' }).click();
   await expect(page.getByRole('heading', { level: 3 })).toHaveCount(3);
 });
-test('mobile public actions preserve the completed-page fallback', async ({
+test('mobile public actions enter completed registration and login routes', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await page.goto('/');
   await page.getByRole('link', { name: 'Get Started', exact: true }).click();
+  await expect(page).toHaveURL(/\/register$/);
+  await expect(page.getByLabel('Display name')).toBeVisible();
+  await page.getByRole('link', { name: 'WriteSpace', exact: true }).click();
   await expect(
     page.getByRole('heading', { level: 1, name: 'WriteSpace' }),
   ).toBeVisible();
   await page
     .getByRole('link', { name: 'Get Started Free', exact: true })
     .click();
+  await expect(page).toHaveURL(/\/register$/);
+  await expect(page.getByLabel('Display name')).toBeVisible();
+  await page.getByRole('link', { name: 'WriteSpace', exact: true }).click();
   await expect(
     page.getByRole('heading', { level: 1, name: 'WriteSpace' }),
   ).toBeVisible();
@@ -131,7 +139,7 @@ test('mobile public actions preserve the completed-page fallback', async ({
   await expect(page.getByLabel('Username')).toBeVisible();
   await page.getByRole('link', { name: 'Register', exact: true }).click();
   await expect(
-    page.getByRole('heading', { level: 1, name: 'WriteSpace' }),
+    page.getByRole('heading', { level: 1, name: 'Register' }),
   ).toBeVisible();
   await page.screenshot({
     path: test.info().outputPath('guest-mobile.png'),

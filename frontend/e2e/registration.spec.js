@@ -88,13 +88,24 @@ test('invalid login, UI registration, canonical storage, reload and authenticate
   await page.getByRole('button', { name: /Rae Reader/ }).click();
   await page.getByRole('button', { name: 'Logout' }).click();
   await expect(page).toHaveURL(/\/$/);
-  expect(await page.evaluate(() => localStorage.getItem('writespace_session'))).toBeNull();
+  expect(
+    await page.evaluate(() => localStorage.getItem('writespace_session')),
+  ).toBeNull();
+  expect(
+    await page.evaluate(() =>
+      JSON.parse(localStorage.getItem('writespace_users')),
+    ),
+  ).toEqual(state.users);
   await page.getByRole('link', { name: 'Start Reading', exact: true }).click();
   await page.getByLabel('Username').fill(' rAE ');
   await page.getByLabel('Password').fill(' demo-only ');
   await page.getByRole('button', { name: 'Login', exact: true }).click();
   await expect(page).toHaveURL(/\/blogs$/);
-  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('writespace_session')))).toEqual(state.session);
+  expect(
+    await page.evaluate(() =>
+      JSON.parse(localStorage.getItem('writespace_session')),
+    ),
+  ).toEqual(state.session);
 });
 
 test('mobile header registration entry rejects reserved names and returns through Login', async ({

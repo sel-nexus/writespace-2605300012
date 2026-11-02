@@ -7,6 +7,7 @@ import RegisterPage from './pages/RegisterPage.jsx';
 import Home from './pages/Home.jsx';
 import ReadBlog from './pages/ReadBlog.jsx';
 import WriteBlog from './pages/WriteBlog.jsx';
+import AdminDashboard from './pages/AdminDashboard.jsx';
 import { Navbar } from './components/Navbar.jsx';
 import { ProtectedRoute } from './components/ProtectedRoute.jsx';
 import { ui } from './components/ui.js';
@@ -22,7 +23,8 @@ export default function App() {
     location.pathname === '/blogs' ||
     location.pathname.startsWith('/blog/') ||
     location.pathname === '/write' ||
-    location.pathname.startsWith('/edit/');
+    location.pathname.startsWith('/edit/') ||
+    location.pathname === '/admin';
   return (
     <div className={ui.page}>
       {reading && session && (
@@ -61,6 +63,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <WriteBlog editing />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute adminOnly>
+              <AdminDashboard />
             </ProtectedRoute>
           }
         />
