@@ -6,6 +6,7 @@ import LoginPage from './pages/LoginPage.jsx';
 import RegisterPage from './pages/RegisterPage.jsx';
 import Home from './pages/Home.jsx';
 import ReadBlog from './pages/ReadBlog.jsx';
+import WriteBlog from './pages/WriteBlog.jsx';
 import { Navbar } from './components/Navbar.jsx';
 import { ProtectedRoute } from './components/ProtectedRoute.jsx';
 import { ui } from './components/ui.js';
@@ -14,11 +15,19 @@ import { getSession } from './utils/auth.js';
 export default function App() {
   const location = useLocation();
   const [session, setSession] = useState(getSession);
-  useEffect(() => { setSession(getSession()); }, [location.key]);
-  const reading = location.pathname === '/blogs' || location.pathname.startsWith('/blog/');
+  useEffect(() => {
+    setSession(getSession());
+  }, [location.key]);
+  const reading =
+    location.pathname === '/blogs' ||
+    location.pathname.startsWith('/blog/') ||
+    location.pathname === '/write' ||
+    location.pathname.startsWith('/edit/');
   return (
     <div className={ui.page}>
-      {reading && session && <Navbar session={session} onLogout={() => setSession(null)} />}
+      {reading && session && (
+        <Navbar session={session} onLogout={() => setSession(null)} />
+      )}
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
@@ -36,6 +45,22 @@ export default function App() {
           element={
             <ProtectedRoute>
               <ReadBlog />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/write"
+          element={
+            <ProtectedRoute>
+              <WriteBlog />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/edit/:id"
+          element={
+            <ProtectedRoute>
+              <WriteBlog editing />
             </ProtectedRoute>
           }
         />
